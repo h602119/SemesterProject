@@ -5,6 +5,20 @@ import math
 import random 
 #TODO: check for walls
 
+def point_to_arrays(point_array):
+    return_array_x = []
+    return_array_y = []
+    for element in point_array: 
+        print(point_array)
+        return_array_x.append(element.x)
+        return_array_y.append(element.y)
+    print(return_array_x,return_array_y)
+
+    return return_array_x, return_array_y
+
+
+
+
 
 def distance_between_two_points(p1, p2):
         #print("POINTS: ", p1, p2)
@@ -22,6 +36,9 @@ class nine_points(Node):
         self.past_points = []
         new_path = self.generate_points()
         print("ended")
+        x, y = point_to_arrays(new_path)
+
+        print(x, y)
         
 
     
@@ -50,7 +67,7 @@ class nine_points(Node):
                 tmp_point.x = point_x*distance_pr_point + random_float + formula
 
                 random_float = random.uniform(-half_rand, half_rand)
-                pprint("random float2: ",random_float)
+                print("random float2: ",random_float)
                 tmp_point.y = (point_y*distance_pr_point + random_float + formula)*flip
 
                 #pick a new point untill its far enough away from other points
