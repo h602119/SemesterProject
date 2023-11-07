@@ -11,16 +11,10 @@ import matplotlib.pyplot as plt
 #TODO: check for walls
 
 
-
-
-
-
 # Sample occupancy grid matrix (replace this with your actual grid data)
 
 
 # Create a binary mask to separate occupied and free cells
-
-
 
 
 # Show the plot
@@ -60,9 +54,10 @@ class nine_points_algo_v1(Node):
     def visualize_map(self, map_msg):
     # Extract the occupancy grid data
         occupancy_grid_data = np.array(map_msg.data).reshape((map_msg.info.height, map_msg.info.width))
+        
 
         # Create a binary mask to separate occupied and free cells
-        occupied_cells = occupancy_grid_data >= 50  # You can adjust this threshold
+        occupied_cells = occupancy_grid_data >= 50  
         free_cells = occupancy_grid_data < 50
 
         # Create a figure and axis

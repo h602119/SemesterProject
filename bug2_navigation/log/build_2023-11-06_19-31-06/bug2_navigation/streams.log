@@ -1,0 +1,70 @@
+[1.387s] Invoking command in '/home/rocotics/ros2_ws/src/bug2_navigation': PYTHONPATH=/home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/prefix_override:/home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base build/bug2_navigation build --build-base /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build install --record /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/install.log --install-scripts $base/lib/bug2_navigation --single-version-externally-managed
+[1.743s] running egg_info
+[1.744s] creating build/bug2_navigation/bug2_navigation.egg-info
+[1.746s] writing build/bug2_navigation/bug2_navigation.egg-info/PKG-INFO
+[1.747s] writing dependency_links to build/bug2_navigation/bug2_navigation.egg-info/dependency_links.txt
+[1.747s] writing entry points to build/bug2_navigation/bug2_navigation.egg-info/entry_points.txt
+[1.747s] writing requirements to build/bug2_navigation/bug2_navigation.egg-info/requires.txt
+[1.747s] writing top-level names to build/bug2_navigation/bug2_navigation.egg-info/top_level.txt
+[1.748s] writing manifest file 'build/bug2_navigation/bug2_navigation.egg-info/SOURCES.txt'
+[1.798s] reading manifest file 'build/bug2_navigation/bug2_navigation.egg-info/SOURCES.txt'
+[1.799s] writing manifest file 'build/bug2_navigation/bug2_navigation.egg-info/SOURCES.txt'
+[1.800s] running build
+[1.800s] running build_py
+[1.800s] creating /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build
+[1.801s] creating /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib
+[1.801s] creating /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.801s] copying bug2_navigation/wall_follower.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.805s] copying bug2_navigation/map.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.805s] copying bug2_navigation/go_to_point.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.808s] copying bug2_navigation/bug2_controller.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.809s] copying bug2_navigation/robot_controller.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.811s] copying bug2_navigation/__init__.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.812s] copying bug2_navigation/9point.py -> /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation
+[1.813s] running install
+[1.815s] running install_lib
+[1.818s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.818s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/wall_follower.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.818s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/map.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.819s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/go_to_point.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.819s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/bug2_controller.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.819s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/robot_controller.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.820s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/__init__.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.820s] copying /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build/lib/bug2_navigation/9point.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation
+[1.820s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/wall_follower.py to wall_follower.cpython-38.pyc
+[1.823s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/map.py to map.cpython-38.pyc
+[1.824s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/go_to_point.py to go_to_point.cpython-38.pyc
+[1.827s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/bug2_controller.py to bug2_controller.cpython-38.pyc
+[1.830s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/robot_controller.py to robot_controller.cpython-38.pyc
+[1.831s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/__init__.py to __init__.cpython-38.pyc
+[1.831s] byte-compiling /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation/9point.py to 9point.cpython-38.pyc
+[1.832s] running install_data
+[1.833s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/ament_index
+[1.834s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/ament_index/resource_index
+[1.834s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/ament_index/resource_index/packages
+[1.834s] copying resource/bug2_navigation -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/ament_index/resource_index/packages
+[1.835s] copying package.xml -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation
+[1.835s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/launch
+[1.835s] copying launch/spawn_robot.launch.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/launch
+[1.836s] copying launch/spawn_robot_maze.launch.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/launch
+[1.837s] copying launch/controller.launch.py -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/launch
+[1.837s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/worlds
+[1.838s] copying worlds/maze_nofloor.world -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/worlds
+[1.839s] copying worlds/bug_2_exercise.world -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/worlds
+[1.840s] copying worlds/maze.world -> /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/worlds
+[1.843s] creating /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/share/bug2_navigation/rviz
+[1.843s] running install_egg_info
+[1.846s] Copying build/bug2_navigation/bug2_navigation.egg-info to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages/bug2_navigation-0.0.0-py3.8.egg-info
+[1.848s] running install_scripts
+[1.875s] Installing 9Point script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.876s] Installing MapTest script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.876s] Installing bug2_controller script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.876s] Installing cTest script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.877s] Installing con_test script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.877s] Installing goTest script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.879s] Installing go_to_point script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.880s] Installing robot_controller script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.881s] Installing test script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.881s] Installing wall_follower script to /home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/bug2_navigation
+[1.881s] writing list of installed files to '/home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/install.log'
+[1.931s] Invoked command in '/home/rocotics/ros2_ws/src/bug2_navigation' returned '0': PYTHONPATH=/home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/prefix_override:/home/rocotics/ros2_ws/src/bug2_navigation/install/bug2_navigation/lib/python3.8/site-packages:${PYTHONPATH} /usr/bin/python3 setup.py egg_info --egg-base build/bug2_navigation build --build-base /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/build install --record /home/rocotics/ros2_ws/src/bug2_navigation/build/bug2_navigation/install.log --install-scripts $base/lib/bug2_navigation --single-version-externally-managed

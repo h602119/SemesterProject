@@ -1,5 +1,5 @@
 #goal definition
 bool create_point
 ---
-float64 data_x
-float64 data_y
+float64[] data_x
+float64[] data_y
