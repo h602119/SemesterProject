@@ -1,7 +1,6 @@
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import OccupancyGrid
-from nav_msgs.msg import MapMetaData
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -30,17 +29,6 @@ class Map(Node):
 
         self.wall_info = msg.info
 
-        print(f'Wall width {self.wall_info.width}')
-
-        print(f'Wall height {self.wall_info.height}')
-
-        print(f'Wall resolution {self.wall_info.resolution}')
-        
-
-        # Get the data about the walls
-        
-        print('finding Walls... ')
-
         self.wall_data = msg.data
 
         #Creating a numpy matrix array of the data received from the map.
@@ -62,21 +50,6 @@ class Map(Node):
         if not self.is_flooded:
             self.flood()
 
-        #For testing purposes
-        """
-        check_x = [355,707,1026,1665,1464,1524,664,220,268,301,896,1719,1719,187,983,994,1313,691]
-        check_y = [1807,1623,1575,1678,1104,1044,774,1255,1169,1694,1553,1678,509,482,108,1569,1088,833]
-
-        for i in range(len(check_x)):
-
-            self.is_wall(check_x[i], check_y[i])
-            
-            if self.is_inside_house(check_x[i], check_y[i]) >= 0:
-                print(f'{check_x[i]}, {check_y[i]} is within the outer walls')
-            else:
-                print(f'{check_x[i]}, {check_y[i]} is outside the outer walls')
-        """
-            #Test was successful
         real_points_x = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10]
         real_points_y = [-10, -8, -6, -4, -2, 0, 2, 4, 6, 8, 10]
 
@@ -107,6 +80,8 @@ class Map(Node):
     def fromArray_ToReal(self, x, y):
         if x > 2000 or y > 2000 or x < 0 or y < 0:
             return [0,0]
+        x += 1
+        y += 1
         x = (x/100)-10
         y = (y/100)-10
 
@@ -130,16 +105,14 @@ class Map(Node):
                         queue.append((nx, ny))
     
     #Check method check if a given point is within our outside the outer walls.   
-    def is_inside_house(self, x, y):
-        
+    def is_inside_house(self, x, y):    
         return self.matrix[y][x] == -1
 
     #Returns True if a point is inside a wall
     def is_wall(self, x, y):
-        
         return self.map[y][x] == 100
             
-            
+
 
 def main(args=None):
     rclpy.init(args=args)
