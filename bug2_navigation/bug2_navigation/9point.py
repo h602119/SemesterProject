@@ -51,13 +51,24 @@ class Point_9(Node):
 
     #The algorithm that generates 9 points.
     def generate9Points(self):
-        p = [ self.fromArray_ToReal(1096, 1196),
-              self.fromArray_ToReal(1394, 1380),
-              self.fromArray_ToReal(1118, 1586) ]
+        p = [   self.fromArray_ToReal(1199, 904),
+                self.fromArray_ToReal(1383, 628),
+                self.fromArray_ToReal(1605, 877),
+                self.fromArray_ToReal(1735, 828),
+                self.fromArray_ToReal(1638, 417),
+                self.fromArray_ToReal(923, 417),
+                self.fromArray_ToReal(923, 590),
+                self.fromArray_ToReal(652, 590),
+                self.fromArray_ToReal(680, 1407),
+                self.fromArray_ToReal(815, 1683), ]
 
-        x = [p[0][0],p[1][0],p[2][0]]
-        y = [p[0][1],p[1][1],p[2][1]]
+        x = []
+        y = []
 
+        for i in range(len(p)):
+            x.append(p[i][0])
+            y.append(p[i][1])
+        
         points = [x, y]
 
         return points
@@ -74,9 +85,6 @@ class Point_9(Node):
         #Creating a numpy matrix array of the data received from the map.
         self.matrix = np.array(msg.data)
         self.matrix = self.matrix.reshape(self.wall_info.height, self.wall_info.width)
-        
-        #Rotating the map 3*90deg since [0,0] in np array is bottom left, but the original has [0,0] bottom right.
-        self.matrix = np.rot90(self.matrix, k=3)
 
         #Saving a copy of the matrix as map
         self.map = self.matrix

@@ -212,7 +212,6 @@ class Bug2(Node):
 
 
     def go_to_next_point(self):
-        self.reset_all_variables()
         self.client_x.pop(0)
         self.client_y.pop(0)
         if len(self.client_x) > 0:
