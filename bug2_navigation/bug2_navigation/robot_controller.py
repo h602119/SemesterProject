@@ -16,7 +16,12 @@ class RobotActionClient(Node):
 
         self.nine_p_client = self.create_client(NinePoint, 'nine_point')
         while not self.nine_p_client.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('waiting for wall follower...')
+            self.get_logger().info('waiting for 9Point...')
+
+
+        self.req = NinePoint.Request()
+        self.res = NinePoint.Response()
+
 
     def send_goal(self):
         self.nine_point_request()
@@ -39,24 +44,26 @@ class RobotActionClient(Node):
 
     def nine_point_request(self):
 
-        NinePoint.Request().create_point = True
-        self.future = self.nine_p_client.call_async(NinePoint.Request())
+        self.req.create_point = True
+        self.future = self.nine_p_client.call_async(self.req)
         rclpy.spin_until_future_complete(self, self.future)
 
         result = self.future.result()
 
-        list = result.data_x
-        print(list)
+        print(f'Result x: {result.data_x[0]}')
+        print(f'Result y: {result.data_y[0]}')
+        return result.data_x
+   
 
 def main(args=None):
     rclpy.init(args=args)
 
     action_client = RobotActionClient()
-
+    
     future = action_client.send_goal()
-
+    """
     rclpy.spin_until_future_complete(action_client, future)
-
+    """
 
 if __name__ == '__main__':
     main()
