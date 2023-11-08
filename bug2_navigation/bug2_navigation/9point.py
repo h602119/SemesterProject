@@ -19,20 +19,16 @@ class Point_9(Node):
 
     def nine_point_service(self, request, response):
 
-        test = 1.0
-
-        print(type(response.data_x))
-        print(response.data_x)
-        
-        print(f'Test: {type(test)}')
-        print(test)
-        
+        testx = 1.0        
+        testy = 2.0        
         
         if(request.create_point):
-
-            NinePoint.Response().data_x = test
-
-            return response
+            
+            response.data_x = [testx, testy, testx, testy]
+            
+            response.data_y = [testy, testx, testy, testx]
+            
+        return response
 
     
 
