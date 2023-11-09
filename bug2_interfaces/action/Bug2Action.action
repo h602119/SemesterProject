@@ -1,9 +1,0 @@
-#goal definition
-float64[] positions_x
-float64[] positions_y
----
-#result definition
-geometry_msgs/Point base_position
----
-#feedback definition
-geometry_msgs/Point current_position
