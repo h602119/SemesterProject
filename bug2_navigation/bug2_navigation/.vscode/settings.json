@@ -1,0 +1,30 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/rocotics/tutorial/build/my_robot_controller",
+        "/home/rocotics/tutorial/install/my_robot_controller/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/ros2_aruco_interfaces/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/ros2_aruco/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/my_robot_pkg/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/my_package/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/multi_robot_challenge_23/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/communication/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/bug2_navigation/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/bug2_interfaces/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/braitenberg_vehicle/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/rocotics/tutorial/build/my_robot_controller",
+        "/home/rocotics/tutorial/install/my_robot_controller/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/ros2_aruco_interfaces/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/ros2_aruco/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/my_robot_pkg/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/my_package/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/multi_robot_challenge_23/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/communication/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/bug2_navigation/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/bug2_interfaces/lib/python3.8/site-packages",
+        "/home/rocotics/ros2_ws/install/braitenberg_vehicle/lib/python3.8/site-packages",
+        "/opt/ros/foxy/lib/python3.8/site-packages"
+    ]
+}
