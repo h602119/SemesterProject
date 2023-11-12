@@ -15,9 +15,10 @@ class GoToPointNode(Node):
         self.sub = self.create_subscription(Odometry, '/odom', self.callback_odom, 10)
         self.laser_sub = self.create_subscription(LaserScan, '/scan', self.clbk_laser, 10)
         self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        
+        self.start_time = self.get_clock().now()
 
         self.srv = self.create_service(GoToPoint, 'go_to_point', self.gtp_service)
+        self.timer = self.create_timer(0.1, self.spin_360)
 
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -102,6 +103,23 @@ class GoToPointNode(Node):
         )
         euler = euler_from_quaternion(quaternion)
         self.yaw = euler[2]
+    
+    def spin_360(self):
+        msg = Twist()
+        current_time = self.get_clock().now()
+        elapsed_time = current_time - self.start_time
+        time_to_spin = 2 * math.pi / 1.0
+        timer = self.create_timer(0.1, self.spin)
+
+        if elapsed_time.nanoseconds / 1e9 < time_to_spin:
+            msg.angular.z = 1.0
+            self.pub.publish(msg)
+        else:
+            msg.angular.z = 0
+            self.pub.publish(msg)
+            timer.cancel()
+
+
 
 
     def timer_callback(self):
@@ -114,6 +132,7 @@ class GoToPointNode(Node):
         if self.is_at_destination:
             #If the destination is reached, reset the goal
             #reset_destination(self)
+            self.spin_360()
             return
         elif self.is_wall_ahead:
             wall_check(self)
