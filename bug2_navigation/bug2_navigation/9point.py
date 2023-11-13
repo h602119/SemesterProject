@@ -48,8 +48,16 @@ class Point_9(Node):
         for point in points:
 
             new_point = self.fromArray_ToReal(point.x, point.y)
-            self.points_x.append(new_point[0])
-            self.points_y.append(new_point[1])
+            #self.points_x.append(new_point[0])
+            #self.points_y.append(new_point[1])
+
+        self.points_x.append(-1.0)
+        self.points_x.append(0.0)
+        self.points_x.append(0.0)
+        self.points_y.append(-1.0)
+        self.points_y.append(-2.0)
+        self.points_y.append(-2.0)
+
         
         if(request.create_point):
             response.data_x = self.points_x
@@ -75,7 +83,7 @@ class Point_9(Node):
             #Saving a copy of the matrix as map
             self.map = self.matrix
 
-        self.plot_wall_data(self.matrix)
+        #self.plot_wall_data(self.matrix)
 
 
     #Plot the map data
@@ -101,7 +109,7 @@ class Point_9(Node):
             plt.scatter(p.x, p.y, color=c ,marker=m, s=20)
 
         #Set to True if you want all points to display.
-        show_all_points = True
+        show_all_points = False
         if show_all_points:        
             for p in self.rejected_values:
                 c = 'red'

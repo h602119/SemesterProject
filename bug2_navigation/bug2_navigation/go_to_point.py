@@ -57,6 +57,13 @@ class GoToPointNode(Node):
         self.stop = True
 
         self.target_locked = False
+        
+        #Variables connected to rotate180
+        self.rotate_started = False
+        self.rotate_point = False
+        self.rotate_finished = False
+        self.rotate_amount = 2
+        self.rotate_angle = 0
 
 
     def gtp_service(self, request, response):
@@ -111,10 +118,14 @@ class GoToPointNode(Node):
 
         destination_check(self)
 
+        if self.rotate_point and not self.rotate_finished:
+            self.rotate180(self.rotate_amount)
+            return
+        
         if self.is_at_destination:
-            #If the destination is reached, reset the goal
             reset_destination(self)
             return
+        
         elif self.is_wall_ahead:
             wall_check(self)
 
@@ -125,7 +136,45 @@ class GoToPointNode(Node):
                 move(self)
             
             wall_check(self)
+
+
+    def rotate180(self, amount):
+        msg = Twist()      
+        current = self.yaw
+
+        rotation_speed = 0.4
+
+        #calulating the angle to rotate towards.
+        if not self.rotate_started:
+            self.rotate_amount = amount
+            self.rotate_angle = (math.pi+current) % (2*math.pi)
+            self.rotate_started = True
+            
+        angle = self.rotate_angle
+
+        if abs(current-angle) >= 0.1:
+            print(f'Current : {current} -- Angle : {angle} -- > {abs(current-angle)}')
+            msg.angular.z = rotation_speed
+            self.pub.publish(msg)
+            current = self.yaw
         
+        if abs(current-angle)%(2*math.pi) < 0.1:
+            self.rotate_started = False
+            
+            if self.rotate_amount > 1:
+                print('minus one')
+                self.rotate_amount -= 1
+            else:
+                self.rotate_finished = True
+                print('success')
+                msg.angular.z = 0.0
+                self.pub.publish(msg)
+
+        
+
+        else:
+            return
+
 
 def set_point(self, x, y):
         
@@ -174,10 +223,13 @@ def destination_check(self):
 
     #decide if the bot is an accepted distance from the goal.
     if (distance <= 0.2) and (distance >= -0.2):
-        self.is_at_destination = True
-        print('distance stop')
-        full_stop(self)
-        print(f"Destination reached: {distance} from goal...")
+        self.rotate_point = True
+
+        if self.rotate_finished:
+            self.is_at_destination = True
+            print('distance stop')
+            full_stop(self)
+            print(f"Destination reached: {distance} from goal...")
 
 def correction(self):
     msg = Twist()
@@ -258,6 +310,11 @@ def reset_destination(self):
     self.go_to_X = 0
     self.go_to_Y = 0
     self.go_to_angle = 0
+
+    self.rotate_started = False
+    self.rotate_point = False
+    self.rotate_amount = 2
+    self.rotate_finished = False
 
 def main(args=None):
     rclpy.init(args=args)

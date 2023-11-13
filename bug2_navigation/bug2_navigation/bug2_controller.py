@@ -10,6 +10,7 @@ from bug2_interfaces.action import Bug2Action
 import time
 
 class Bug2(Node):
+
     def __init__(self):
         super().__init__("Bug2_Controller")
         self.get_logger().info("Bug2_Controller Node created")
@@ -209,7 +210,7 @@ class Bug2(Node):
             return True
         else:
             return False
-
+      
 
     def go_to_next_point(self):
         self.client_x.pop(0)
