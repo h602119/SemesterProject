@@ -11,10 +11,11 @@ from nav_msgs.msg import Odometry
 class WallFollower(Node):
     def __init__(self):
         super().__init__("Wall_Follower")
+
         self.get_logger().info("Wall_follower Node created")
-        self.sub = self.create_subscription(LaserScan, '/tb3_0/scan', self.clbk_laser, 10)
-        self.pub = self.create_publisher(Twist, '/tb3_0/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(Odometry, '/tb3_0/odom', self.callback_odom, 10)
+        self.sub = self.create_subscription(LaserScan, 'scan', self.clbk_laser, 10)
+        self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.odom_sub = self.create_subscription(Odometry, 'odom', self.callback_odom, 10)
 
         self.srv = self.create_service(SetBool, 'wall_follower', self.wall_follower_service)
 

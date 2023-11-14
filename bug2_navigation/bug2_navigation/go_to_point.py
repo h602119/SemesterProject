@@ -12,9 +12,9 @@ class GoToPointNode(Node):
     def __init__(self):
         super().__init__("Go_To_Point")
         self.get_logger().info("go_to_point node created")
-        self.sub = self.create_subscription(Odometry, '/tb3_0/odom', self.callback_odom, 10)
-        self.laser_sub = self.create_subscription(LaserScan, '/tb3_0/scan', self.clbk_laser, 10)
-        self.pub = self.create_publisher(Twist, '/tb3_0/cmd_vel', 10)
+        self.sub = self.create_subscription(Odometry, 'odom', self.callback_odom, 10)
+        self.laser_sub = self.create_subscription(LaserScan, 'scan', self.clbk_laser, 10)
+        self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
         
 
         self.srv = self.create_service(GoToPoint, 'go_to_point', self.gtp_service)

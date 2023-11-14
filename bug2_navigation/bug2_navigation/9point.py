@@ -5,6 +5,7 @@ import numpy as np
 from nav_msgs.msg import OccupancyGrid
 import matplotlib.pyplot as plt
 from geometry_msgs.msg import Point
+from threading import Thread
 
 
 class Point_9(Node):
@@ -37,33 +38,29 @@ class Point_9(Node):
         self.previous_values = []
         self.rejected_values = []
 
-    #9 POINT Callback
     def nine_point_service(self, request, response):
-        
-        print('Request from controller received')
-        self.points_x = []
-        self.points_y = []
-        points = self.gen_9_points()
-
-        for point in points:
-
-            new_point = self.fromArray_ToReal(point.x, point.y)
-            #self.points_x.append(new_point[0])
-            #self.points_y.append(new_point[1])
-
-        self.points_x.append(-1.0)
-        self.points_x.append(0.0)
-        self.points_x.append(0.0)
-        self.points_y.append(-1.0)
-        self.points_y.append(-2.0)
-        self.points_y.append(-2.0)
-
-        
-        if(request.create_point):
-            response.data_x = self.points_x
+        if self.is_flooded:
             
-            response.data_y = self.points_y
-            print('Sending 9 points.')
+            print('Request from controller received')
+            self.points_x = []
+            self.points_y = []
+            
+            points = self.gen_9_points()
+
+            for point in points:
+                new_point = self.fromArray_ToReal(point.x, point.y)
+                self.points_x.append(new_point[0])
+                self.points_y.append(new_point[1])
+
+            if request.create_point:
+                response.data_x = self.points_x
+                response.data_y = self.points_y
+                print('Sending 9 points.')
+            
+            # Run plot_wall_data in a separate thread, so that it is non blocking
+            plot_thread = Thread(target=self.plot_wall_data, args=(self.matrix,))
+            plot_thread.start()
+
         return response
 
 
@@ -83,33 +80,21 @@ class Point_9(Node):
             #Saving a copy of the matrix as map
             self.map = self.matrix
 
-        #self.plot_wall_data(self.matrix)
-
+            print('Flooding map')
+            self.flood()
+            print('Flooding complete...')
+        
 
     #Plot the map data
     def plot_wall_data(self, map_matrix):
         
-        #Flood map if this has not been done.
-        if not self.is_flooded:
-            print('Flooding map')
-            self.flood()
-            print('Flooding complete...')
         
         print('generating 9 points')
         points = self.gen_9_points()
         print('     points generated.')
 
-        for p in points:
-            c = 'lime'
-            m = '.'
-            if self.is_outside_house(p.x, p.y) or self.is_wall(p.x, p.y):
-                c = 'red'
-                m = 'x'
-            
-            plt.scatter(p.x, p.y, color=c ,marker=m, s=20)
-
         #Set to True if you want all points to display.
-        show_all_points = False
+        show_all_points = True
         if show_all_points:        
             for p in self.rejected_values:
                 c = 'red'
@@ -120,6 +105,16 @@ class Point_9(Node):
                 c = 'blue'
                 m = '.'
                 plt.scatter(p.x, p.y, color=c ,marker=m, s=10)    
+
+        #The 9 new points, will always show
+        for p in points:
+            c = 'lime'
+            m = '.'
+            if self.is_outside_house(p.x, p.y) or self.is_wall(p.x, p.y):
+                c = 'red'
+                m = 'x'
+            
+            plt.scatter(p.x, p.y, color=c ,marker=m, s=20)
 
 
         plt.imshow(map_matrix, cmap='gray', origin='lower')
@@ -195,38 +190,33 @@ class Point_9(Node):
         return points
 
 
+
     def generate_random_point(self):
-        len = self.wall_info.height  #Vales for randomly generating points.
+        len = self.wall_info.height  # Values for randomly generating points.
+        
         while True:
-            #Creating a random number from 0 to length of the map
+            # Creating a random number from 0 to length of the map
             rand_x = np.random.uniform(0, len)
             rand_y = np.random.uniform(0, len)
 
-            #Converting arrays to np for faster search
-            previous_values = np.array(self.previous_values)
-            rejected_values = np.array(self.rejected_values)
-
-            #Relative and absolute distance between two points
-            rel = 0.1
-            abs = 0.1
-
-            #making a point out of my 
             random_point = Point()
             random_point.x = rand_x
             random_point.y = rand_y
 
-            #Return point if point is not "un-valid" or been selected before
-            if not any(np.all(np.isclose(np.array([point.x, point.y]), [random_point.x, random_point.y], rtol=rel, atol=abs)) for point in previous_values) \
-                    and not any(np.all(np.isclose(np.array([point.x, point.y]), [random_point.x, random_point.y], rtol=rel, atol=abs)) for point in rejected_values):
+            # Check if the new point is at least 0.25 units away from previous points
+            if all(self.distance(random_point, p) >= 75 for p in self.previous_values + self.rejected_values):
                 return random_point
 
-   
+    def distance(self, point1, point2):
+        return np.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
+
+    
     def is_valid_point(self, p):
         if self.is_wall(p.x, p.y) or self.is_outside_house(p.x, p.y):
-            return False
+                return False
         else:
-            return True
-        
+                return True
+
 
 def main(args=None):
 
