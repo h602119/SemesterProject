@@ -8,11 +8,21 @@ from bug2_interfaces.srv import GoToPoint
 from rclpy.action import ActionServer
 from bug2_interfaces.action import Bug2Action
 import time
+from ros2_aruco_interfaces.msg import ArucoMarkers
+from scoring_interfaces.srv import SetMarkerPosition
+from geometry_msgs.msg import Point
 
 class Bug2(Node):
+
     def __init__(self):
         super().__init__("Bug2_Controller")
+
+        self.position = Point()
+        self.id = 0
         self.get_logger().info("Bug2_Controller Node created")
+        
+
+
         
         self.wf_client = self.create_client(SetBool, 'wall_follower')
         while not self.wf_client.wait_for_service(timeout_sec=1.0):
@@ -21,13 +31,28 @@ class Bug2(Node):
         self.gtp_client = self.create_client(GoToPoint, 'go_to_point')
         while not self.gtp_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('waiting for go to point...')
+        
+        self.scoring_client = self.create_client(SetMarkerPosition, '/set_marker_position')
+        while not self.scoring_client.wait_for_service(timeout_sec=1.0):
+            self.get_logger().info('service not available, waiting again...')
 
         self.action_server = ActionServer(self, Bug2Action, 'action_robot', self.action_callback)
+        self.create_subscription(ArucoMarkers, '/tb3_0/aruco_markers', self.marker_callback, 10)
+        self.create_subscription(ArucoMarkers, '/tb3_0/marker_map_pose', self.marker_poses, 10)
+        
 
 
-        #from action client
-        self.client_x = 0
-        self.client_y = 0
+
+
+        #Boolean that stops the entire program
+        self.master_stop = False
+
+        #list of positions from action client
+        self.client_x = []
+        self.client_y = []
+
+        #Scoring variables
+        self.score_req = SetMarkerPosition.Request()
 
         #Go to point variables:
         self.req = GoToPoint.Request()
@@ -42,9 +67,6 @@ class Bug2(Node):
         self.position_x = 0
         self.position_y = 0
 
-        self.yaw = 0
-        self.current_angle = 0
-
         #Central initial values
         self.gtp_x = 0
         self.gtp_y = 0
@@ -53,23 +75,52 @@ class Bug2(Node):
         self.target_angle = 0
 
         #Boolean
-        self.initialise_variables = False
         self.is_on_line = False
 
         #action server variables
         self.goal_pos_x = 0.0
         self.goal_pos_y = 0.0
         self.action_received = False
+  
+
+    def marker_callback(self, msg):
+        self.get_logger().info(str(msg.marker_ids))
+        self.id = msg.marker_ids[0]
+
+    def marker_poses(self, msg):
+        self.get_logger().info(str(msg.poses))
+        self.position = msg.position
 
     def action_callback(self, target):
-        self.goal_pos_x = float(target.request.target_position.x)
-        self.goal_pos_y = float(target.request.target_position.y)
+
+        self.client_x = target.request.positions_x
+        self.client_y = target.request.positions_y
+        
+        print(f'X list {target.request.positions_x}')
+        print(f'Y list {target.request.positions_y}')
+        
+        self.goal_pos_x = self.client_x[0]
+        self.goal_pos_y = self.client_y[0]
+
         self.action_received = True
+        
         self.get_logger().info('Executing goal...')
-        self.get_logger().info(f'Position received : {target.request.target_position.x}, {target.request.target_position.y}')
+        self.get_logger().info(f'Positions received : {self.client_x}, {self.client_y}')
+
         target.succeed()
+
         result = Bug2Action.Result()
         return result
+    
+    
+    def send_request_scoring(self, marker_id, marker_pos):
+        self.score_req.marker_id = marker_id
+        self.score_req.marker_position = marker_pos
+        self.future = self.scoring_client.call_async(self.score_req)
+        rclpy.spin_until_future_complete(self, self.future)
+        return self.future.result()
+
+
 
     def send_request_go_to_point(self, move, x, y):
         if not self.action_received:
@@ -110,8 +161,6 @@ class Bug2(Node):
 
 
     def set_variables(self, x, y):
-        if not self.initialise_variables:
-
             self.wf_req.data = False
     
             self.future = self.wf_client.call_async(self.wf_req)
@@ -125,11 +174,13 @@ class Bug2(Node):
 
             self.gtp_x = x
             self.gtp_y = y
+            print(f'gtpx={x}, gtpy={y}')
+
             self.starting_x = self.position_x = self.closest_pos[0] = float(numbers[0])
             self.starting_y = self.position_y = self.closest_pos[1] = float(numbers[1])
+            print(f'startingx ={float(numbers[0])}, startingy={float(numbers[1])}')
 
             self.target_angle = self.calculate_degrees(self.starting_x, self.starting_y, self.gtp_x, self.gtp_y)
-            self.initialise_variables = True
 
 
     def calculate_degrees(self, pos_x, pos_y, goal_x, goal_y):
@@ -200,6 +251,69 @@ class Bug2(Node):
             return True
         else:
             return False
+      
+
+    def go_to_next_point(self):
+        self.client_x.pop(0)
+        self.client_y.pop(0)
+        if len(self.client_x) > 0:
+            self.goal_pos_x = self.client_x[0]
+            self.goal_pos_y = self.client_y[0]
+            self.set_variables(self.client_x[0], self.client_y[0])
+
+
+    def reset_all(self):
+        #list of positions from action client
+        self.client_x = []
+        self.client_y = []
+
+        #Go to point variables:
+        self.req = GoToPoint.Request()
+        self.res = GoToPoint.Response()
+
+        #Wall_follower variables:
+        self.wf_req = SetBool.Request()
+        self.wf_res = SetBool.Response()
+
+        #Variables related to calculating the closest pos
+        self.closest_pos = [0, 0]
+        self.position_x = 0
+        self.position_y = 0
+
+        #Central initial values
+        self.gtp_x = 0
+        self.gtp_y = 0
+        self.starting_x = 0
+        self.starting_y = 0
+        self.target_angle = 0
+
+        #Boolean
+        self.is_on_line = False
+
+        #action server variables
+        self.goal_pos_x = 0.0
+        self.goal_pos_y = 0.0
+        self.action_received = False
+
+
+    #Stop what robot is currently doing and navigate towards new urgent point
+    def drop_and_go(self):
+        pass
+
+    
+    #Update the robot controller that a point of interest has been found.
+    def point_of_interest_found(self):
+        pass
+
+
+    #Wait for other robot to arrive at current destination if an urgent point is reported.
+    def wait_for_robot(self):
+        pass
+
+        """
+        Custom message are needed. A special message for sending point of interests between robot and bug2 controller.
+        publish subscriber between them. 
+        """
 
     
 
@@ -209,73 +323,87 @@ def main(args=None):
 
     client = Bug2()
 
-
-    #Go To point variables
-    wall_found = False
-    x = 4.0
-    y = 4.0
-    while not client.action_received:
-        client.get_logger().info('Awaiting position')
-        rclpy.spin_once(client)
-        x = float(client.goal_pos_x)
-        y = float(client.goal_pos_y)
-
-    client.get_logger().info(f'Navigation towards : {x}, {y}')
-
-    #Wall follower variables
-    wf_drive = False
-    
-    #Goal
-    goal_reached = False
-    
-    
-
-    client.set_variables(x, y)
-
-    while(not goal_reached):
         
+    while not client.master_stop:
+        while not client.action_received:
+            client.get_logger().info('Awaiting position')
+            rclpy.spin_once(client)
 
-        wf_drive = False
-        client.wf_res.message = ""
-        
-        if not wall_found:
-            gtp_response = client.send_request_go_to_point(True, x, y)
+        while len(client.client_x) > 0: 
+            x = client.goal_pos_x
+            y = client.goal_pos_y
+
+            client.get_logger().info(f'Navigation towards : {x}, {y}')
+
+            #Go To point variables
+            wall_found = False
+
+            #Wall follower variables
+            wf_drive = False
             
-            if not gtp_response:
-                client.get_logger().info('Switching mode: FW')
-                wall_found = True
-            else:
-                time.sleep(1)
-        else:
-            wf_drive = True
-        
-        
-        client.send_request_wall_follower(wf_drive)
-            
-        
+            #Goal
+            goal_reached = False
 
-        if client.calculate_and_check():
-            
-            if client.update_closest_point():
-                client.get_logger().info('CLOSER POINT LOCATED')
-                if wf_drive:
-                    client.get_logger().info('Switching mode: GTP')
-                    client.wf_res.message = "full stop"
-                    wf_response = client.send_request_wall_follower(False)
-                    wall_found = False
+            client.set_variables(x, y)
+
+
+            while(not goal_reached):
+
+                wf_drive = False
+                client.wf_res.message = ""
+                
+                if not wall_found:
+                    gtp_response = client.send_request_go_to_point(True, x, y)
                     
+                    if not gtp_response:
+                        client.get_logger().info('Switching mode: FW')
+                        wall_found = True
+                    else:
+                        time.sleep(1)
+                else:
+                    wf_drive = True
+                
+                client.send_request_wall_follower(wf_drive)
+                    
+                
+
+                if client.calculate_and_check():
+
+                    if client.update_closest_point():
+
+                        client.get_logger().info('CLOSER POINT LOCATED')
+                        if wf_drive:
+
+                            client.get_logger().info('Switching mode: GTP')
+                            client.wf_res.message = "full stop"
+                            client.send_request_wall_follower(False)
+                            wall_found = False
+                            
 
 
-        if client.goal_reached():
-            
-            goal_reached = True
-            gtp_response = client.send_request_go_to_point(False, x, y)
-            client.wf_res.message = "full stop"
-            wf_response = client.send_request_wall_follower(False)
-            client.get_logger().info(f'Goal reached at : {client.position_x}, {client.position_y}')
+                if client.goal_reached():
+
+                    goal_reached = True
+                    gtp_response = client.send_request_go_to_point(False, x, y)
+                    client.wf_res.message = "full stop"
+                    client.send_request_wall_follower(False)
+                    client.get_logger().info(f'Goal reached at : {client.position_x}, {client.position_y}')
+
+                #Check if a stop has been called
+                if client.master_stop:
+                    break
+
+            client.go_to_next_point()
+
+            #Check if a stop has been called
+            if client.master_stop:
+                break
+    
+    client.reset_all()
 
 
     client.destroy_node()
+
 
     rclpy.shutdown()
 
