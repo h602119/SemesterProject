@@ -30,6 +30,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "action/Bug2Action.action"
   "srv/GoToPoint.srv"
   "srv/NinePoint.srv"
+  "srv/UrgentPoint.srv"
   DEPENDENCIES geometry_msgs
   DEPENDENCIES std_msgs
   
