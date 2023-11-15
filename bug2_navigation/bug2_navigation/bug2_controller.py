@@ -2,11 +2,12 @@ import rclpy
 from rclpy.node import Node
 
 import math
-
+from bug2_interfaces.action import Bug2Action
 from std_srvs.srv import SetBool
 from bug2_interfaces.srv import GoToPoint
 from rclpy.action import ActionServer
 from bug2_interfaces.action import Bug2Action
+from bug2_interfaces.srv import UrgentPoint
 import time
 
 class Bug2(Node):
@@ -17,6 +18,8 @@ class Bug2(Node):
         
         self.get_logger().info("Bug2_Controller Node created")
         
+        self.action_server = ActionServer(self, Bug2Action, 'action_robot', self.action_callback)
+
         self.wf_client = self.create_client(SetBool, 'wall_follower')
         while not self.wf_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('waiting for wall follower...')
@@ -25,7 +28,17 @@ class Bug2(Node):
         while not self.gtp_client.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('waiting for go to point...')
 
-        self.action_server = ActionServer(self, Bug2Action, 'action_robot', self.action_callback)
+        self.request_points_client = self.create_client(SetBool, 'request_points')  # Assuming 'tb3_0' is the namespace
+       
+        self.urgent_point_client = self.create_client(UrgentPoint, 'urgent_point')
+
+        self.big_fire_service = self.create_service(self, SetBool, 'big_fire', self.drop_and_go)
+
+        self.move_along_service = self.create_service(self, SetBool, 'move_along', self.move_on)
+
+        self.big_fire_located = False
+
+        self.move_along = False
 
         #Boolean that stops the entire program
         self.master_stop = False
@@ -61,6 +74,47 @@ class Bug2(Node):
         self.goal_pos_x = 0.0
         self.goal_pos_y = 0.0
         self.action_received = False
+
+    def send_urgent_point(self, target_x, target_y, tag_id):
+        if not self.big_fire_located:
+            self.big_fire_located = True
+            req = UrgentPoint.Request()
+            req.robot_id = self.get_namespace()
+            req.target_x = target_x
+            req.target_y = target_y
+            req.tag_id = tag_id
+    
+            future = self.urgent_point_client.call_async(req)
+            rclpy.spin_until_future_complete(self, future)
+
+            if future.result() is not None:
+                response = future.result()
+                if response.received:
+                    self.get_logger().info('Urgent point was located, waiting for other robot')
+                    self.wait_for_robot()
+                else:
+                    self.get_logger().info('Urgent point was not detected')
+            else:
+                self.get_logger().info('Service call failed')
+
+
+    def request_new_points(self):
+        if not self.big_fire_located and not self.move_along:
+            req = SetBool.Request()
+            req.data = True  # Set to True to request new points
+            future = self.request_points_client.call_async(req)
+            rclpy.spin_until_future_complete(self, future)
+
+            if future.result() is not None:
+                response = future.result()
+                if response.success:
+                    self.get_logger().info(f'New points generated')
+                else:
+                    self.get_logger().info('Failed to generate new points')
+            else:
+                self.get_logger().info('Service call failed')
+        else:
+            self.wait_for_robot()
 
 
     def action_callback(self, target):
@@ -217,12 +271,13 @@ class Bug2(Node):
       
 
     def go_to_next_point(self):
-        self.client_x.pop(0)
-        self.client_y.pop(0)
-        if len(self.client_x) > 0:
-            self.goal_pos_x = self.client_x[0]
-            self.goal_pos_y = self.client_y[0]
-            self.set_variables(self.client_x[0], self.client_y[0])
+        if not self.big_fire_located or self.move_along:
+            self.client_x.pop(0)
+            self.client_y.pop(0)
+            if len(self.client_x) > 0:
+                self.goal_pos_x = self.client_x[0]
+                self.goal_pos_y = self.client_y[0]
+                self.set_variables(self.client_x[0], self.client_y[0])
 
 
     def reset_all(self):
@@ -257,13 +312,21 @@ class Bug2(Node):
         self.goal_pos_x = 0.0
         self.goal_pos_y = 0.0
         self.action_received = False
-
+    
 
     #Stop what robot is currently doing and navigate towards new urgent point
-    def drop_and_go(self):
-        pass
+    def drop_and_go(self, request, response):
+        
+        if request.data:
+            self.big_fire_located = True
+            self.client_x = []
+            self.client_y = []
+        
 
-    
+        response.success = True
+        return response
+        
+
     #Update the robot controller that a point of interest has been found.
     def point_of_interest_found(self):
         pass
@@ -271,13 +334,23 @@ class Bug2(Node):
 
     #Wait for other robot to arrive at current destination if an urgent point is reported.
     def wait_for_robot(self):
-        pass
+        if self.big_fire_located and self.move_along:
+            self.request_new_points()
+        else:
+            time.sleep(2)
 
         """
         Custom message are needed. A special message for sending point of interests between robot and bug2 controller.
         publish subscriber between them. 
         """
 
+
+    def move_on(self, request, response):
+        if request.data and self.big_fire_located:
+            self.move_along = True
+        
+        response.success = True
+        return response
     
 
 def main(args=None):
@@ -361,6 +434,10 @@ def main(args=None):
             if client.master_stop:
                 break
     
+        if len(client.client_x) == 0:
+            client.get_logger().info('Point list empty, requesting new points')
+            client.request_new_points()
+            
     client.reset_all()
 
 

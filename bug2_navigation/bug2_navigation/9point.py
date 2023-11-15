@@ -190,7 +190,6 @@ class Point_9(Node):
         return points
 
 
-
     def generate_random_point(self):
         len = self.wall_info.height  # Values for randomly generating points.
         
@@ -206,6 +205,7 @@ class Point_9(Node):
             # Check if the new point is at least 0.25 units away from previous points
             if all(self.distance(random_point, p) >= 75 for p in self.previous_values + self.rejected_values):
                 return random_point
+
 
     def distance(self, point1, point2):
         return np.sqrt((point1.x - point2.x) ** 2 + (point1.y - point2.y) ** 2)
