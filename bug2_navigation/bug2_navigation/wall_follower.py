@@ -11,10 +11,11 @@ from nav_msgs.msg import Odometry
 class WallFollower(Node):
     def __init__(self):
         super().__init__("Wall_Follower")
+
         self.get_logger().info("Wall_follower Node created")
-        self.sub = self.create_subscription(LaserScan, '/scan', self.clbk_laser, 10)
-        self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
-        self.odom_sub = self.create_subscription(Odometry, '/odom', self.callback_odom, 10)
+        self.sub = self.create_subscription(LaserScan, 'scan', self.clbk_laser, 10)
+        self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.odom_sub = self.create_subscription(Odometry, 'odom', self.callback_odom, 10)
 
         self.srv = self.create_service(SetBool, 'wall_follower', self.wall_follower_service)
 
@@ -67,6 +68,11 @@ class WallFollower(Node):
 
         self.position = 0
         self.stop = False
+
+                #lidar lists
+        self.lidar_front_list = []
+        self.lidar_left_list = []
+        self.lidar_right_list = []
         
     def wall_follower_service(self, request, response):
         
@@ -101,6 +107,11 @@ class WallFollower(Node):
 
         self.lidar_right_direct = round(msg.ranges[270], decimal)
         self.lidar_right_front = round(msg.ranges[315], decimal)
+
+        self.lidar_width_front = 10
+        self.lidar_front_list = msg.ranges[self.lidar_width_front:0:-5] + msg.ranges[360-self.lidar_width_front:360:5]
+        self.lidar_left_list =  msg.ranges[70:110] 
+        self.lidar_right_list = msg.ranges[250:290]
         
 
     def callback_odom(self, msg):
@@ -143,7 +154,7 @@ class WallFollower(Node):
 def wall_check(self):
     #Check if there is a wall ahead
 
-    if self.lidar_front_direct <= self.distance_wall_ahead:
+    if any_too_close(self, self.lidar_front_list,is_close = self.distance_wall_ahead):
         self.is_wall_found = True
         full_stop(self)
         self.drive_mode = "follow wall"
@@ -160,6 +171,13 @@ def drive(self):
         msg.linear.x = self.velocity_normal
         msg.angular.z = 0.0
         self.pub.publish(msg)
+        
+def any_too_close(self, list, is_close = 0.6, printstring = "not defined"):
+    if any(ele < is_close for ele in list):
+        #self.get_logger().info(f"too close + {printstring}")
+        #print(f"too close + {printstring}")
+        return True 
+    return False
 
 def follow_wall(self):
     if not self.is_wall_found:
@@ -174,7 +192,7 @@ def follow_wall(self):
     distance  = self.distance_wall_ahead
 
 
-    if self.lidar_front_direct < distance:
+    if  any_too_close(self, self.lidar_front_list, is_close = self.distance_wall_ahead):
         print("1")
         msg.linear.x = 0.01
         msg.angular.z = -self.rotation_fast

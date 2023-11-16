@@ -5,6 +5,7 @@ from geometry_msgs.msg import Twist
 from tf_transformations import euler_from_quaternion
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import LaserScan
+from std_srvs.srv import SetBool
 from bug2_interfaces.srv import GoToPoint
 
 class GoToPointNode(Node):
@@ -12,12 +13,14 @@ class GoToPointNode(Node):
     def __init__(self):
         super().__init__("Go_To_Point")
         self.get_logger().info("go_to_point node created")
-        self.sub = self.create_subscription(Odometry, '/odom', self.callback_odom, 10)
-        self.laser_sub = self.create_subscription(LaserScan, '/scan', self.clbk_laser, 10)
-        self.pub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.sub = self.create_subscription(Odometry, 'odom', self.callback_odom, 10)
+        self.laser_sub = self.create_subscription(LaserScan, 'scan', self.clbk_laser, 10)
+        self.pub = self.create_publisher(Twist, 'cmd_vel', 10)
         
 
         self.srv = self.create_service(GoToPoint, 'go_to_point', self.gtp_service)
+        self.srv_pub = self.create_service(SetBool, 'go_to_point_publish', self.go_to_point_publish_service)
+        
 
         timer_period = 0.1
         self.timer = self.create_timer(timer_period, self.timer_callback)
@@ -57,6 +60,21 @@ class GoToPointNode(Node):
         self.stop = True
 
         self.target_locked = False
+        
+        #Variables connected to rotate180
+        self.publish = True
+        self.rotate_started = False
+        self.rotate_point = False
+        self.rotate_finished = False
+        self.rotate_amount = 2
+        self.rotate_angle = 0
+
+    def go_to_point_publish_service(self, request, response): 
+        self.publish = request.data 
+        response.success = True
+        self.get_logger().info(str(request.data))
+        return response
+    
 
 
     def gtp_service(self, request, response):
@@ -111,10 +129,14 @@ class GoToPointNode(Node):
 
         destination_check(self)
 
-        if self.is_at_destination:
-            #If the destination is reached, reset the goal
-            #reset_destination(self)
+        if self.rotate_point and not self.rotate_finished:
+            self.rotate180(self.rotate_amount)
             return
+        
+        if self.is_at_destination:
+            reset_destination(self)
+            return
+        
         elif self.is_wall_ahead:
             wall_check(self)
 
@@ -125,30 +147,46 @@ class GoToPointNode(Node):
                 move(self)
             
             wall_check(self)
+
+
+    def rotate180(self, amount):
+        msg = Twist()      
+        current = self.yaw
+
+        rotation_speed = 0.4
+
+        #calulating the angle to rotate towards.
+        if not self.rotate_started:
+            self.rotate_amount = amount
+            self.rotate_angle = (math.pi+current) % (2*math.pi)
+            self.rotate_started = True
+            
+        angle = self.rotate_angle
+
+        if abs(current-angle) >= 0.1:
+            print(f'Current : {current} -- Angle : {angle} -- > {abs(current-angle)}')
+            msg.angular.z = rotation_speed
+            if self.publish:
+                self.pub.publish(msg)
+            current = self.yaw
+        
+        if abs(current-angle)%(2*math.pi) < 0.1:
+            self.rotate_started = False
+            
+            if self.rotate_amount > 1:
+                print('minus one')
+                self.rotate_amount -= 1
+            else:
+                self.rotate_finished = True
+                print('success')
+                msg.angular.z = 0.0
+                if self.publish:
+                    self.pub.publish(msg)
+
         
 
-
-"""def set_point(self):
-        
-    #Get input X and Y coordinates from user and set global variables.
-    print(f"The bot is currently at pos x:{round(self.position.x,5)}, y:{round(self.position.y,5)}")
-    user_input = input("Please input GO-TO Coordinates ... ")
-    coordinates = user_input.split(',')
-    try:
-        self.go_to_X = float(coordinates[0])
-        self.go_to_Y = float(coordinates[1])
-        self.is_pos_given = True
-        self.is_at_destination = False
-
-        #Check if the position given is the same as user position
-        distance = distance_check(self)
-        self.distance = distance
-        destination_check(self)
-
-    except ValueError:
-        print("INPUT ERROR, type coordiantes as such: num1, num2 ")
-        reset_destination(self)
-"""
+        else:
+            return
 
 
 def set_point(self, x, y):
@@ -198,10 +236,13 @@ def destination_check(self):
 
     #decide if the bot is an accepted distance from the goal.
     if (distance <= 0.2) and (distance >= -0.2):
-        self.is_at_destination = True
-        print('distance stop')
-        full_stop(self)
-        print(f"Destination reached: {distance} from goal...")
+        self.rotate_point = True
+
+        if self.rotate_finished:
+            self.is_at_destination = True
+            print('distance stop')
+            full_stop(self)
+            print(f"Destination reached: {distance} from goal...")
 
 def correction(self):
     msg = Twist()
@@ -235,8 +276,8 @@ def correction(self):
             msg.angular.z = 0.2
         else:
             msg.angular.z = -0.2
-    
-    self.pub.publish(msg)
+    if self.publish:
+        self.pub.publish(msg)
 
 def move(self):
     msg = Twist()
@@ -253,8 +294,8 @@ def move(self):
     else:
         msg.angular.z = 0.0
         msg.linear.x = 0.25
-    
-    self.pub.publish(msg)
+    if self.publish:
+        self.pub.publish(msg)
 
 def wall_check(self):
     if (self.lidar_front_direct < self.wall_distance_check) or (self.lidar_left_front < self.wall_side) or (self.lidar_right_front < self.wall_side):
@@ -271,18 +312,22 @@ def full_stop(self):
     msg = Twist()
     msg.angular.z = 0.0
     msg.linear.x = 0.0
-    
-    self.pub.publish(msg)
+    if self.publish:
+        self.pub.publish(msg)
 
 def reset_destination(self):
     #Reset all values back to original
     self.is_pos_given = False
     self.is_at_destination = False
     self.is_rotating = False
-    self.position = 0
     self.go_to_X = 0
     self.go_to_Y = 0
     self.go_to_angle = 0
+
+    self.rotate_started = False
+    self.rotate_point = False
+    self.rotate_amount = 2
+    self.rotate_finished = False
 
 def main(args=None):
     rclpy.init(args=args)

@@ -34,7 +34,9 @@ setup(
             'con_test = bug2_navigation.con_test:main',
             'goTest = bug2_navigation.goTest:main',
             'cTest = bug2_navigation.cTest:main',        
-            '9Point = bug2_navigation.9point:main',         
+            '9Point = bug2_navigation.9point:main',
+            'MapTest = bug2_navigation.map:main',   
+            'new_aruco = bug2_navigation.new_aruco:main',     
         ],
     },
 )

@@ -1,6 +1,6 @@
 #goal definition
-float64[100] target_positions_x
-float64[100] target_positions_y
+float64[] positions_x
+float64[] positions_y
 ---
 #result definition
 geometry_msgs/Point base_position
