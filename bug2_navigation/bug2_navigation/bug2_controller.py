@@ -32,11 +32,13 @@ class Bug2(Node):
        
         self.urgent_point_client = self.create_client(UrgentPoint, 'urgent_point')
 
-        self.big_fire_service = self.create_service(self, SetBool, 'big_fire', self.drop_and_go)
+        self.big_fire_service = self.create_service(SetBool, 'big_fire', self.drop_and_go)
 
-        self.move_along_service = self.create_service(self, SetBool, 'move_along', self.move_on)
+        self.move_along_service = self.create_service(SetBool, 'move_along', self.move_on)
 
         self.big_fire_located = False
+
+        self.drop_and_go_requested = False
 
         self.move_along = False
 
@@ -75,7 +77,10 @@ class Bug2(Node):
         self.goal_pos_y = 0.0
         self.action_received = False
 
+
     def send_urgent_point(self, target_x, target_y, tag_id):
+        self.get_logger().info(f"{self.get_namespace()} send urgent point")
+        self.get_logger().info(f"Big fire located: {self.big_fire_located}")
         if not self.big_fire_located:
             self.big_fire_located = True
             req = UrgentPoint.Request()
@@ -83,9 +88,9 @@ class Bug2(Node):
             req.target_x = target_x
             req.target_y = target_y
             req.tag_id = tag_id
-    
+            self.get_logger().info(f"sending urgent point")
+            
             future = self.urgent_point_client.call_async(req)
-            rclpy.spin_until_future_complete(self, future)
 
             if future.result() is not None:
                 response = future.result()
@@ -99,11 +104,20 @@ class Bug2(Node):
 
 
     def request_new_points(self):
-        if not self.big_fire_located and not self.move_along:
+        self.get_logger().info(f"{self.get_namespace()} request new points")
+        self.get_logger().info(f"{self.get_namespace()} drop_and_go_requested : {self.drop_and_go_requested}")
+        
+        if (not self.big_fire_located and not self.move_along) or self.drop_and_go_requested:#TODO fix this is false, when it supposed to be True
+            self.drop_and_go_requested = False
+            self.get_logger().info(f"{self.get_namespace()} ------------------ 1 -----------------")
+            
             req = SetBool.Request()
             req.data = True  # Set to True to request new points
+            self.get_logger().info(f"{self.get_namespace()} ------------------ 2 -----------------")
+
             future = self.request_points_client.call_async(req)
             rclpy.spin_until_future_complete(self, future)
+            self.get_logger().info(f"{self.get_namespace()} ------------------ 3 -----------------")
 
             if future.result() is not None:
                 response = future.result()
@@ -118,7 +132,7 @@ class Bug2(Node):
 
 
     def action_callback(self, target):
-
+        self.get_logger().info(f"{self.get_namespace()} action callback")
         self.client_x = target.request.positions_x
         self.client_y = target.request.positions_y
         
@@ -258,6 +272,7 @@ class Bug2(Node):
 
 
     def goal_reached(self):
+        self.get_logger().info(f"{self.get_namespace()} goal reached")
         pos_x = round(self.position_x, 5)
         pos_y = round(self.position_y, 5)
         go_to_x = round(self.gtp_x, 5)
@@ -271,6 +286,7 @@ class Bug2(Node):
       
 
     def go_to_next_point(self):
+        self.get_logger().info(f"{self.get_namespace()} go to next point")
         if not self.big_fire_located or self.move_along:
             self.client_x.pop(0)
             self.client_y.pop(0)
@@ -281,6 +297,7 @@ class Bug2(Node):
 
 
     def reset_all(self):
+        self.get_logger().info(f"{self.get_namespace()} reset all")
         #list of positions from action client
         self.client_x = []
         self.client_y = []
@@ -316,11 +333,13 @@ class Bug2(Node):
 
     #Stop what robot is currently doing and navigate towards new urgent point
     def drop_and_go(self, request, response):
-        
+        self.get_logger().info(f"{self.get_namespace()} drop and go")
         if request.data:
+            self.drop_and_go_requested = True
             self.big_fire_located = True
             self.client_x = []
             self.client_y = []
+        
         
 
         response.success = True
@@ -328,14 +347,18 @@ class Bug2(Node):
         
 
     #Update the robot controller that a point of interest has been found.
-    def point_of_interest_found(self):
-        pass
+    def point_of_interest_found(self, x, y, id):
+        self.get_logger().info(f"{self.get_namespace()} point of interest found")
+        self.send_urgent_point(x,y,id)
+        
 
 
     #Wait for other robot to arrive at current destination if an urgent point is reported.
     def wait_for_robot(self):
+        self.get_logger().info(f"{self.get_namespace()} wait for robot")
         if self.big_fire_located and self.move_along:
             self.request_new_points()
+            time.sleep(1)
         else:
             time.sleep(2)
 
@@ -346,6 +369,7 @@ class Bug2(Node):
 
 
     def move_on(self, request, response):
+        self.get_logger().info(f"{self.get_namespace()} move on")
         if request.data and self.big_fire_located:
             self.move_along = True
         
@@ -406,7 +430,6 @@ def main(args=None):
 
                     if client.update_closest_point():
 
-                        client.get_logger().info('CLOSER POINT LOCATED')
                         if wf_drive:
 
                             client.get_logger().info('Switching mode: GTP')
@@ -428,7 +451,11 @@ def main(args=None):
                 if client.master_stop:
                     break
 
-            client.go_to_next_point()
+            if x ==3.0 and y == -1.0:
+                print('big found')
+                client.point_of_interest_found((x-0.1), (y-0.1), 4)
+            else:
+                client.go_to_next_point()
 
             #Check if a stop has been called
             if client.master_stop:
@@ -437,7 +464,9 @@ def main(args=None):
         if len(client.client_x) == 0:
             client.get_logger().info('Point list empty, requesting new points')
             client.request_new_points()
-            
+
+        
+
     client.reset_all()
 
 
